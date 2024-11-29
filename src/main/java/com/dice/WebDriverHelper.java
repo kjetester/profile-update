@@ -7,11 +7,10 @@ import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class WebDriverHelper {
 
-  private static volatile RemoteWebDriver driver;
+  private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
 
   /**
    * WebDriver singleton.
@@ -19,30 +18,35 @@ public class WebDriverHelper {
    * @return driver
    */
   public static WebDriver getDriver() {
-    if (driver == null) {
+    if (driver.get() == null) {
       synchronized (WebDriverHelper.class) {
-        if (driver == null) {
-          WebDriverManager.chromedriver().clearDriverCache().setup();
-          ChromeOptions opts = new ChromeOptions();
-//      opts
+        WebDriverManager.chromedriver().clearDriverCache().setup();
+        ChromeOptions opts = new ChromeOptions();
+        opts
 //          .addArguments("--headless", "--disable-gpu")
-//          .setAcceptInsecureCerts(true);
-          driver = new ChromeDriver();
-          driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-          driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(5));
-          driver.manage().window().setSize(new Dimension(1500, 800));
-          driver.manage().window().setPosition(new Point(0, 0));
-        }
+            .setAcceptInsecureCerts(true);
+        driver.set(new ChromeDriver(opts));
+        driver.get().manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+        driver.get().manage().timeouts().pageLoadTimeout(Duration.ofSeconds(5));
+        driver.get().manage().window().setSize(new Dimension(1500, 800));
+        driver.get().manage().window().setPosition(new Point(0, 0));
       }
     }
-    return driver;
+    return driver.get();
+  }
+
+  public static void quitDriver() {
+    if (driver.get() != null) {
+      driver.get().quit();
+      driver.remove();
+    }
   }
 
   public static void turnImplicitlyWaitOn() {
-    driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+    driver.get().manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
   }
 
   public static void turnImplicitlyWaitOff() {
-    driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(0));
+    driver.get().manage().timeouts().implicitlyWait(Duration.ofSeconds(0));
   }
 }
