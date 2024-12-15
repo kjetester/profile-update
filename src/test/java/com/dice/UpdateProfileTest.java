@@ -15,7 +15,7 @@ import org.testng.annotations.Test;
 
 public class UpdateProfileTest {
 
-  Actions actions = new Actions(getDriver());
+  private Actions actions = new Actions(getDriver());
 
   @BeforeMethod
   public void setUp() {
